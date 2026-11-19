@@ -1,6 +1,9 @@
 {
   "id": "dev-1",
-  "name": "Devin",
+  "name": "DEV",
+  "aliases": [
+    "Devin"
+  ],
   "role": "dev",
   "title": "Lập trình viên",
   "color": "#81b29a",

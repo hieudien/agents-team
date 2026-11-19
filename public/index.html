@@ -36,7 +36,7 @@
         <div id="convTitle" class="project-name">Chưa có dự án</div>
         <div id="projectPath" class="project-path"></div>
       </div>
-      <button id="stopBtn" class="danger">Dừng tất cả</button>
+      <button id="stopBtn" class="danger hidden">Dừng tất cả</button>
     </header>
     <section id="chat" class="chat"></section>
     <form id="composer" class="composer">
@@ -45,7 +45,7 @@
       <div class="composer-row">
         <button type="button" id="attachBtn" class="ghost icon" title="Đính kèm ảnh">📎</button>
         <input type="file" id="fileInput" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden>
-        <textarea id="input" rows="2" placeholder="Nhắn cả team, gõ @ để tag agent, Ctrl+V để dán ảnh… (Enter gửi, Shift+Enter xuống dòng)"></textarea>
+        <textarea id="input" rows="2" placeholder="Nhắn cả team, gõ @ để tag agent, Ctrl+V để dán ảnh… (Alt+Enter gửi, Enter xuống dòng)"></textarea>
         <button type="submit">Gửi</button>
       </div>
     </form>
@@ -55,7 +55,12 @@
     <form method="dialog" id="projectForm">
       <h3>Dự án mới</h3>
       <label>Tên dự án<input name="name" required placeholder="Website bán hàng"></label>
-      <label>Thư mục code (workspace)<input name="workspace" required placeholder="C:\Users\ASUS\source\my-web"></label>
+      <label>Thư mục code (workspace)
+        <span class="pick-row"><input name="workspace" required placeholder="C:\path\to\my-web"><button type="button" id="pickFolderBtn" class="ghost">Chọn…</button></span>
+      </label>
+      <label>Lệnh kiểm tra tự động (tuỳ chọn)
+        <input name="verifyCmd" placeholder="npm test (để trống = tự nhận npm test nếu có)">
+      </label>
       <div class="dialog-actions">
         <button value="cancel" class="ghost" formnovalidate>Huỷ</button>
         <button value="ok">Tạo</button>

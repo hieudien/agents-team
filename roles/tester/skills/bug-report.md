@@ -1,6 +1,6 @@
 ---
 name: bug-report
-description: Format for a bug report handed to the coordinator.
+description: Format for a bug report handed to the manager.
 ---
 title: "Bug: <short symptom>"
 task:

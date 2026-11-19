@@ -1,6 +1,9 @@
 {
   "id": "tester-1",
-  "name": "Tessa",
+  "name": "TESTER",
+  "aliases": [
+    "Tessa"
+  ],
   "role": "tester",
   "title": "Kiểm thử viên",
   "color": "#f2a541",

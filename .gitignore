@@ -1,3 +1,9 @@
 data/
 agents/*/worklog.jsonl
 agents/*/sessions.json
+agents/*/MEMORY.md
+node_modules/
+.claude/
+.env
+.env.*
+*.log

@@ -4,54 +4,56 @@
   "maxConcurrentRuns": 3,
   "runTimeoutMinutes": 30,
   "maxGateRetries": 3,
+  "maxConsecutiveFailures": 5,
+  "verify": {
+    "enabled": true,
+    "autoDetect": false,
+    "timeoutSeconds": 120,
+    "outputChars": 2000
+  },
+  "maxBugRounds": 3,
+  "bugEscalation": {
+    "afterRound": 2,
+    "effort": "high",
+    "model": null
+  },
+  "limitPauseMinutes": 15,
+  "settingSources": "project",
   "maxTasksPerRequest": 40,
   "chatMaxChars": 400,
   "recentChatForPrompt": 12,
   "memoryMaxChars": 6000,
+  "memoryMaxLines": 50,
   "worklogEntriesInPrompt": 6,
   "overloadQueueThreshold": 2,
   "comments": {
-    "enabled": true,
-    "model": "haiku",
+    "enabled": false,
+    "reviewOnTag": true,
+    "adversarialDiff": false,
+    "reviewRoles": [
+      "manager",
+      "tester"
+    ],
+    "model": "claude-haiku-5-5",
     "effort": null,
     "maxConcurrent": 4
   },
   "roles": {
     "manager": {
-      "model": "sonnet",
-      "effort": "medium",
-      "tools": "Read,Glob,Grep",
-      "allowedTools": [
-        "Read",
-        "Glob",
-        "Grep"
-      ],
-      "permissionMode": "default",
-      "browser": false,
-      "canAssignTo": [
-        "coordinator"
-      ]
-    },
-    "coordinator": {
-      "model": "sonnet",
+      "model": "claude-sonnet-5-5",
       "effort": "low",
-      "tools": "Read,Glob,Grep",
-      "allowedTools": [
-        "Read",
-        "Glob",
-        "Grep"
-      ],
+      "lightweight": true,
+      "resume": false,
       "permissionMode": "default",
       "browser": false,
       "canAssignTo": [
-        "manager",
         "dev",
         "tester"
       ]
     },
     "dev": {
-      "model": "opus",
-      "effort": "high",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
       "tools": "default",
       "allowedTools": [
         "Read",
@@ -65,11 +67,14 @@
       "permissionMode": "acceptEdits",
       "browser": true,
       "canAssignTo": [
-        "coordinator"
-      ]
+        "manager"
+      ],
+      "resume": true,
+      "resetSessionAfterTasks": 8,
+      "lightweight": false
     },
     "tester": {
-      "model": "sonnet",
+      "model": "claude-sonnet-5-5",
       "effort": "medium",
       "tools": "Read,Glob,Grep,Bash",
       "allowedTools": [
@@ -82,8 +87,10 @@
       "permissionMode": "default",
       "browser": true,
       "canAssignTo": [
-        "coordinator"
-      ]
+        "manager"
+      ],
+      "resume": false,
+      "lightweight": false
     }
   },
   "namePool": {

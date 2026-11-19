@@ -54,7 +54,8 @@ const dateOf = ts => {
 
 function withMentions(text) {
   return esc(text).replace(/@([\p{L}\p{N}_-]+)/gu, (all, name) => {
-    const hit = state.agents.find(a => a.name.toLowerCase() === name.toLowerCase() || a.id === name.toLowerCase());
+    const key = name.toLowerCase();
+    const hit = state.agents.find(a => a.name.toLowerCase() === key || a.id === key || (a.aliases || []).some(x => x.toLowerCase() === key));
     return hit ? `<span class="mention">@${esc(hit.name)}</span>` : all;
   });
 }
@@ -72,6 +73,16 @@ function renderAgents() {
       return `<div class="agent" data-id="${a.id}">${avatar(a)}<div class="agent-meta"><div class="agent-name">${esc(a.name)} <span class="agent-sub">@${esc(a.name)}</span></div><div class="agent-sub" title="${esc(sub)}">${esc(sub)}${a.queue && a.state === 'working' ? ` · chờ ${a.queue}` : ''}</div></div></div>`;
     })
     .join('');
+  $('stopBtn').classList.toggle('hidden', !state.agents.some(a => a.state !== 'idle' || a.queue > 0));
+}
+
+async function openDirect(agentId) {
+  if (!state.projectId) return toast('Tạo dự án trước');
+  const conv = await api('POST', `/api/projects/${state.projectId}/conversations`, { agentId });
+  if (!state.conversations.find(c => c.id === conv.id)) state.conversations.unshift(conv);
+  document.querySelector('.tab[data-tab="conversations"]').click();
+  selectConversation(conv.id);
+  $('input').focus();
 }
 
 function renderProjects() {
@@ -83,6 +94,8 @@ function renderProjects() {
 function renderConversations() {
   const conv = state.conversations.find(c => c.id === state.conversationId);
   $('convTitle').textContent = state.projectId ? (conv ? conv.title : 'Cuộc trò chuyện mới') : 'Chưa có dự án';
+  const direct = conv && conv.directAgentId ? agentById(conv.directAgentId) : null;
+  $('input').placeholder = direct ? `Nhắn riêng với ${direct.name}… (Alt+Enter gửi, Enter xuống dòng)` : 'Nhắn cả team, gõ @ để tag agent, Ctrl+V để dán ảnh… (Alt+Enter gửi, Enter xuống dòng)';
   $('convList').innerHTML =
     state.conversations
       .map(
@@ -109,6 +122,14 @@ function checklistHtml(list) {
 const STATUS_LABEL = { done: 'xong', blocked: 'bị chặn', need_info: 'cần thông tin' };
 const KIND_LABEL = { comment: 'góp ý', review: 'phản biện' };
 
+const fmtTok = n => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
+
+function usageHtml(u, cost) {
+  if (!u) return '';
+  const title = `input ${u.input}, output ${u.output}, cache read ${u.cacheRead}, cache write ${u.cacheCreate}${typeof cost === 'number' ? `, $${cost.toFixed(4)}` : ''}`;
+  return `<div class="usage" title="${esc(title)}">${fmtTok(u.input + u.cacheRead + u.cacheCreate)} in · ${fmtTok(u.output)} out</div>`;
+}
+
 function messageHtml(m) {
   const a = agentById(m.from);
   const name = a ? a.name : m.from;
@@ -119,7 +140,7 @@ function messageHtml(m) {
     case 'agent': {
       const d = m.data || {};
       const badge = d.kind ? `<span class="kind ${d.kind}">${KIND_LABEL[d.kind]}</span>` : d.status ? `<span class="status ${d.status}">${STATUS_LABEL[d.status] || d.status}</span>` : '';
-      return `<div class="msg">${avatar(a, true)}<div><div class="who"><b>${esc(name)}</b> · ${esc(a ? a.title : '')}<span class="time">${timeOf(m.ts)}</span>${badge}</div><div class="bubble">${withMentions(m.text)}${checklistHtml(d.checklist)}</div></div></div>`;
+      return `<div class="msg">${avatar(a, true)}<div><div class="who"><b>${esc(name)}</b> · ${esc(a ? a.title : '')}<span class="time">${timeOf(m.ts)}</span>${badge}</div><div class="bubble">${withMentions(m.text)}${checklistHtml(d.checklist)}</div>${usageHtml(d.usage, d.costUsd)}</div></div>`;
     }
     case 'handoff': {
       const detail = m.data && m.data.task
@@ -229,11 +250,30 @@ document.querySelectorAll('.tab').forEach(btn => {
 $('projectSelect').onchange = e => selectProject(e.target.value);
 
 $('newProjectBtn').onclick = () => $('projectDialog').showModal();
+$('pickFolderBtn').onclick = async e => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  btn.textContent = 'Đang mở…';
+  try {
+    const res = await api('POST', '/api/pick-folder', {});
+    if (res.path) {
+      const input = document.querySelector('#projectForm input[name="workspace"]');
+      input.value = res.path;
+      const name = document.querySelector('#projectForm input[name="name"]');
+      if (!name.value) name.value = res.path.split(/[\\/]/).pop();
+    }
+  } catch (err) {
+    toast(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Chọn…';
+  }
+};
 $('projectForm').onsubmit = async e => {
   if (e.submitter && e.submitter.value === 'cancel') return;
   const f = new FormData(e.target);
   try {
-    const p = await api('POST', '/api/projects', { name: f.get('name'), workspace: f.get('workspace') });
+    const p = await api('POST', '/api/projects', { name: f.get('name'), workspace: f.get('workspace'), verifyCmd: f.get('verifyCmd') });
     state.projects.push(p);
     await selectProject(p.id);
     e.target.reset();
@@ -421,7 +461,7 @@ $('input').onkeydown = e => {
     }
     if (e.key === 'Escape') return closeMention();
   }
-  if (e.key === 'Enter' && !e.shiftKey) {
+  if (e.key === 'Enter' && e.altKey) {
     e.preventDefault();
     $('composer').requestSubmit();
   }
@@ -448,6 +488,11 @@ function insertMention(agent) {
   input.focus();
 }
 
+function usageText(u) {
+  if (!u || !u.runs) return '(chưa có)';
+  return `${u.runs} lượt · input ${fmtTok(u.input)} · output ${fmtTok(u.output)} · cache đọc ${fmtTok(u.cacheRead)} · cache ghi ${fmtTok(u.cacheCreate)} · $${u.costUsd.toFixed(4)}`;
+}
+
 $('agentList').onclick = async e => {
   const el = e.target.closest('.agent');
   if (!el) return;
@@ -460,9 +505,14 @@ $('agentList').onclick = async e => {
     <b>Skill</b><div class="pre">${esc(d.skills.map(s => `${s.name}: ${s.description}`).join('\n') || '(trống)')}</div>
     <b>Rule riêng</b><div class="pre">${esc(d.rules || '(trống)')}</div>
     <b>Memory</b><div class="pre">${esc(d.memory || '(trống)')}</div>
+    <b>Token đã dùng</b><div class="pre">${esc(usageText(d.usage))}</div>
     <b>Lịch sử làm việc</b><div class="pre">${esc(log || '(trống)')}</div>
-    <p><button id="tagAgentBtn">Tag @${esc(p.name)}</button> <button class="ghost" id="resetSessionBtn">Phiên mới cho dự án này</button></p>
+    <p><button id="dmAgentBtn">Nhắn riêng</button> <button id="tagAgentBtn">Tag @${esc(p.name)}</button> <button class="ghost" id="resetSessionBtn">Phiên mới cho dự án này</button></p>
     <p class="agent-sub">Phiên mới: giữ memory + lịch sử, chỉ bỏ ngữ cảnh hội thoại dài.</p>`;
+  $('dmAgentBtn').onclick = () => {
+    $('agentDialog').close();
+    openDirect(p.id).catch(toast);
+  };
   $('tagAgentBtn').onclick = () => {
     $('agentDialog').close();
     insertMention(p);

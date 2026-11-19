@@ -6,5 +6,6 @@
   "color": "#3d85c6",
   "bio": "Chia nhỏ mục tiêu thành task, giao đúng người theo chức năng và khối lượng, đề xuất thêm người khi team quá tải.",
   "personality": "Cởi mở, công bằng, thích con số và lịch trình rõ ràng, hay động viên đồng đội.",
-  "createdAt": "2026-11-19T00:00:00.000Z"
+  "createdAt": "2026-11-19T00:00:00.000Z",
+  "retired": true
 }

@@ -1,7 +1,12 @@
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["chat", "status", "checklist", "handoffs"],
+  "required": [
+    "chat",
+    "status",
+    "checklist",
+    "handoffs"
+  ],
   "properties": {
     "chat": {
       "type": "string",
@@ -9,18 +14,32 @@
     },
     "status": {
       "type": "string",
-      "enum": ["done", "blocked", "need_info"]
+      "enum": [
+        "done",
+        "blocked",
+        "need_info"
+      ]
     },
     "checklist": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["item", "pass", "evidence"],
+        "required": [
+          "item",
+          "pass",
+          "evidence"
+        ],
         "properties": {
-          "item": { "type": "string" },
-          "pass": { "type": "boolean" },
-          "evidence": { "type": "string" }
+          "item": {
+            "type": "string"
+          },
+          "pass": {
+            "type": "boolean"
+          },
+          "evidence": {
+            "type": "string"
+          }
         }
       }
     },
@@ -29,25 +48,83 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["to", "title", "task", "checklist"],
+        "required": [
+          "to",
+          "title",
+          "task",
+          "checklist"
+        ],
         "properties": {
-          "to": { "type": "string" },
-          "title": { "type": "string" },
-          "task": { "type": "string" },
-          "checklist": { "type": "array", "items": { "type": "string" } }
+          "to": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "task": {
+            "type": "string"
+          },
+          "checklist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "needs_browser": {
+            "type": "boolean",
+            "description": "true only when the receiver must open the app in a browser (UI work or UI testing)"
+          },
+          "playbook": {
+      "type": "string",
+      "enum": ["bug-fix", "feature", "refactor"],
+      "description": "manager only: which dev playbook skill the dev must read first"
+    },
+    "verdict": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "bug"
+            ],
+            "description": "tester only: pass when all accepted, bug when reporting a defect"
+          }
         }
       }
     },
-    "questions_to_user": { "type": "array", "items": { "type": "string" } },
-    "report_to_user": { "type": "string" },
-    "memory_add": { "type": "array", "items": { "type": "string" } },
+    "questions_to_user": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "report_to_user": {
+      "type": "string"
+    },
+    "verify_notes": { "type": "string", "description": "dev/tester only: full updated note (max 10 lines) on how to run and verify this project; empty when nothing changed" },
+    "concerns": { "type": "array", "items": { "type": "string" }, "description": "dev and tester only: up to 5 short doubts the next agent must check first (what you skipped, could not verify, or assumed)" },
+    "memory_add": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "propose_agent": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["role", "reason"],
+      "required": [
+        "role",
+        "reason"
+      ],
       "properties": {
-        "role": { "type": "string", "enum": ["dev", "tester"] },
-        "reason": { "type": "string" }
+        "role": {
+          "type": "string",
+          "enum": [
+            "dev",
+            "tester"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
       }
     }
   }

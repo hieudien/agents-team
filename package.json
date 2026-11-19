@@ -6,7 +6,10 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "demo": "node server.js --mock"
+    "demo": "node server.js --mock",
+    "dev": "node --watch server.js",
+    "demo:watch": "node --watch server.js --mock",
+    "test": "node tests/args.js && node tests/failures.js && node tests/bugloop.js && node tests/gate.js && node tests/concerns.js && node tests/diff-review.js && node tests/flow.js . 3945"
   },
   "engines": {
     "node": ">=18"

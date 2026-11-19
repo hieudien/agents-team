@@ -7,6 +7,7 @@ const Orchestrator = require('./lib/orchestrator');
 
 const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'));
 const mock = process.argv.includes('--mock');
+const port = Number(process.env.PORT) || config.port;
 const orchestrator = new Orchestrator(config, { mock });
 const clients = new Set();
 
@@ -66,7 +67,30 @@ function serveStatic(req, res) {
   fs.createReadStream(file).pipe(res);
 }
 
+function pickFolder() {
+  const { execFile } = require('child_process');
+  const win = [
+    '-NoProfile',
+    '-STA',
+    '-Command',
+    "[Console]::OutputEncoding=[Text.Encoding]::UTF8; Add-Type -AssemblyName System.Windows.Forms; $f=New-Object System.Windows.Forms.Form; $f.TopMost=$true; $f.ShowInTaskbar=$false; $f.Opacity=0; $f.StartPosition='CenterScreen'; $f.Show(); Add-Type -Name N -Namespace W -MemberDefinition '[DllImport(\"user32.dll\")] public static extern bool SetForegroundWindow(IntPtr h);'; (New-Object -ComObject WScript.Shell).SendKeys('%'); [void][W.N]::SetForegroundWindow($f.Handle); $f.Activate(); $d=New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description='Chọn thư mục code'; if($d.ShowDialog($f) -eq 'OK'){[Console]::Out.Write($d.SelectedPath)}"
+  ];
+  const [cmd, args] =
+    process.platform === 'win32'
+      ? ['powershell', win]
+      : process.platform === 'darwin'
+        ? ['osascript', ['-e', 'POSIX path of (choose folder)']]
+        : ['zenity', ['--file-selection', '--directory']];
+  return new Promise((resolve, reject) => {
+    execFile(cmd, args, { encoding: 'utf8', timeout: 300000, windowsHide: false }, (err, stdout) => {
+      if (err && !stdout) return resolve({ path: '' });
+      resolve({ path: stdout.trim().replace(/[\\/]+$/, '') });
+    });
+  });
+}
+
 const routes = [
+  ['POST', /^\/api\/pick-folder$/, () => pickFolder()],
   ['GET', /^\/api\/state$/, () => ({ projects: store.listProjects(), agents: orchestrator.agentStates(), mock })],
   ['POST', /^\/api\/projects$/, (m, body) => {
     if (!body.workspace) throw new Error('workspace is required');
@@ -74,6 +98,15 @@ const routes = [
   }],
   ['GET', /^\/api\/projects\/([\w-]+)\/conversations$/, m => orchestrator.conversationStates(m[1])],
   ['POST', /^\/api\/projects\/([\w-]+)\/conversations$/, (m, body) => {
+    if (body.agentId) {
+      const agent = agents.getAgent(body.agentId);
+      if (!agent || agent.retired) throw new Error('agent not found');
+      const existing = store.listConversations(m[1]).filter(c => c.directAgentId === agent.id).pop();
+      if (existing) return existing;
+      const direct = store.createConversation(m[1], `💬 ${agent.name}`, agent.id);
+      orchestrator.emitConversations(m[1]);
+      return direct;
+    }
     const conv = store.createConversation(m[1], body.title);
     orchestrator.emitConversations(m[1]);
     return conv;
@@ -95,7 +128,7 @@ const routes = [
   ['GET', /^\/api\/agents\/([\w-]+)$/, m => agents.agentDetails(m[1]) || Promise.reject(new Error('agent not found'))],
   ['POST', /^\/api\/agents$/, (m, body) => orchestrator.createAgent(body.role, body.reason, body.projectId, body.conversationId)],
   ['POST', /^\/api\/agents\/([\w-]+)\/reset-session$/, (m, body) => {
-    agents.setSession(m[1], body.projectId, null);
+    agents.clearSessions(m[1], body.projectId);
     return { ok: true };
   }],
   ['POST', /^\/api\/stop$/, () => {
@@ -111,8 +144,21 @@ const server = http.createServer((req, res) => {
   });
 });
 
+const LOCAL_HOSTS = new Set([`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`]);
+
+function rejectForeign(req, res, url) {
+  const host = String(req.headers.host || '').toLowerCase();
+  const origin = req.headers.origin;
+  const foreignOrigin = origin && !LOCAL_HOSTS.has(origin.replace(/^https?:\/\//i, '').toLowerCase());
+  const notJson = req.method === 'POST' && url.pathname.startsWith('/api/') && !/^application\/json\b/i.test(req.headers['content-type'] || '');
+  if (LOCAL_HOSTS.has(host) && !foreignOrigin && !notJson) return false;
+  send(res, 403, { error: 'forbidden' });
+  return true;
+}
+
 async function handle(req, res) {
   const url = new URL(req.url, 'http://localhost');
+  if (rejectForeign(req, res, url)) return;
   if (url.pathname === '/events') {
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
     res.write(`data: ${JSON.stringify({ type: 'agents', agents: orchestrator.agentStates() })}\n\n`);
@@ -139,7 +185,7 @@ process.on('unhandledRejection', e => orchestrator.toast(`Lỗi không mong mu�
 process.on('uncaughtException', e => orchestrator.toast(`Lỗi không mong muốn: ${e.message}`));
 
 server.on('error', e => {
-  console.error(e.code === 'EADDRINUSE' ? `Cổng ${config.port} đang được dùng. Tắt server cũ hoặc đổi "port" trong config.json.` : e.message);
+  console.error(e.code === 'EADDRINUSE' ? `Cổng ${port} đang được dùng. Tắt server cũ, đặt biến PORT hoặc đổi "port" trong config.json.` : e.message);
   process.exit(1);
 });
 
@@ -147,6 +193,6 @@ setInterval(() => {
   for (const res of clients) res.write(': ping\n\n');
 }, 25000);
 
-server.listen(config.port, '127.0.0.1', () => {
-  console.log(`Agent team running at http://localhost:${config.port}${mock ? ' (mock mode)' : ''}`);
+server.listen(port, '127.0.0.1', () => {
+  console.log(`Agent team running at http://localhost:${port}${mock ? ' (mock mode)' : ''}`);
 });
