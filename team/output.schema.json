@@ -1,0 +1,54 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chat", "status", "checklist", "handoffs"],
+  "properties": {
+    "chat": {
+      "type": "string",
+      "description": "Short chat message to the team in Vietnamese, max 3 sentences, never code"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["done", "blocked", "need_info"]
+    },
+    "checklist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item", "pass", "evidence"],
+        "properties": {
+          "item": { "type": "string" },
+          "pass": { "type": "boolean" },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "handoffs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["to", "title", "task", "checklist"],
+        "properties": {
+          "to": { "type": "string" },
+          "title": { "type": "string" },
+          "task": { "type": "string" },
+          "checklist": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "questions_to_user": { "type": "array", "items": { "type": "string" } },
+    "report_to_user": { "type": "string" },
+    "memory_add": { "type": "array", "items": { "type": "string" } },
+    "propose_agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "reason"],
+      "properties": {
+        "role": { "type": "string", "enum": ["dev", "tester"] },
+        "reason": { "type": "string" }
+      }
+    }
+  }
+}

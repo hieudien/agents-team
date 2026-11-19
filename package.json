@@ -1,0 +1,14 @@
+{
+  "name": "agent-team",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local web chat for a team of Claude Code CLI agents",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "demo": "node server.js --mock"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

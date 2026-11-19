@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Team</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">Agent Team <span id="mockBadge" class="badge hidden">MOCK</span></div>
+    <div class="project-box">
+      <select id="projectSelect"></select>
+      <button id="newProjectBtn" class="ghost" title="Dự án mới">+</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="members">Thành viên</button>
+      <button class="tab" data-tab="conversations">Cuộc trò chuyện</button>
+    </div>
+    <div id="tab-members" class="tab-panel">
+      <div id="agentList"></div>
+      <div class="sidebar-actions">
+        <button id="addDevBtn" class="ghost">+ Dev</button>
+        <button id="addTesterBtn" class="ghost">+ Tester</button>
+      </div>
+    </div>
+    <div id="tab-conversations" class="tab-panel hidden">
+      <button id="newConvBtn" class="ghost full">+ Cuộc trò chuyện mới</button>
+      <div id="convList"></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div id="convTitle" class="project-name">Chưa có dự án</div>
+        <div id="projectPath" class="project-path"></div>
+      </div>
+      <button id="stopBtn" class="danger">Dừng tất cả</button>
+    </header>
+    <section id="chat" class="chat"></section>
+    <form id="composer" class="composer">
+      <div id="mentionMenu" class="mention-menu hidden"></div>
+      <div id="attachBar" class="attach-bar hidden"></div>
+      <div class="composer-row">
+        <button type="button" id="attachBtn" class="ghost icon" title="Đính kèm ảnh">📎</button>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden>
+        <textarea id="input" rows="2" placeholder="Nhắn cả team, gõ @ để tag agent, Ctrl+V để dán ảnh… (Enter gửi, Shift+Enter xuống dòng)"></textarea>
+        <button type="submit">Gửi</button>
+      </div>
+    </form>
+  </main>
+
+  <dialog id="projectDialog">
+    <form method="dialog" id="projectForm">
+      <h3>Dự án mới</h3>
+      <label>Tên dự án<input name="name" required placeholder="Website bán hàng"></label>
+      <label>Thư mục code (workspace)<input name="workspace" required placeholder="C:\Users\ASUS\source\my-web"></label>
+      <div class="dialog-actions">
+        <button value="cancel" class="ghost" formnovalidate>Huỷ</button>
+        <button value="ok">Tạo</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="agentDialog">
+    <div id="agentDetail"></div>
+    <form method="dialog" class="dialog-actions"><button>Đóng</button></form>
+  </dialog>
+
+  <div id="toasts" class="toasts"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

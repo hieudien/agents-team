@@ -1,0 +1,104 @@
+{
+  "port": 3939,
+  "claudeBin": "",
+  "maxConcurrentRuns": 3,
+  "runTimeoutMinutes": 30,
+  "maxGateRetries": 3,
+  "maxTasksPerRequest": 40,
+  "chatMaxChars": 400,
+  "recentChatForPrompt": 12,
+  "memoryMaxChars": 6000,
+  "worklogEntriesInPrompt": 6,
+  "overloadQueueThreshold": 2,
+  "comments": {
+    "enabled": true,
+    "model": "haiku",
+    "effort": null,
+    "maxConcurrent": 4
+  },
+  "roles": {
+    "manager": {
+      "model": "sonnet",
+      "effort": "medium",
+      "tools": "Read,Glob,Grep",
+      "allowedTools": [
+        "Read",
+        "Glob",
+        "Grep"
+      ],
+      "permissionMode": "default",
+      "browser": false,
+      "canAssignTo": [
+        "coordinator"
+      ]
+    },
+    "coordinator": {
+      "model": "sonnet",
+      "effort": "low",
+      "tools": "Read,Glob,Grep",
+      "allowedTools": [
+        "Read",
+        "Glob",
+        "Grep"
+      ],
+      "permissionMode": "default",
+      "browser": false,
+      "canAssignTo": [
+        "manager",
+        "dev",
+        "tester"
+      ]
+    },
+    "dev": {
+      "model": "opus",
+      "effort": "high",
+      "tools": "default",
+      "allowedTools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Edit",
+        "Write",
+        "Bash",
+        "mcp__playwright"
+      ],
+      "permissionMode": "acceptEdits",
+      "browser": true,
+      "canAssignTo": [
+        "coordinator"
+      ]
+    },
+    "tester": {
+      "model": "sonnet",
+      "effort": "medium",
+      "tools": "Read,Glob,Grep,Bash",
+      "allowedTools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash",
+        "mcp__playwright"
+      ],
+      "permissionMode": "default",
+      "browser": true,
+      "canAssignTo": [
+        "coordinator"
+      ]
+    }
+  },
+  "namePool": {
+    "dev": [
+      "Leo",
+      "Noah",
+      "Ryan",
+      "Kai",
+      "Owen"
+    ],
+    "tester": [
+      "Mia",
+      "Zoe",
+      "Ivy",
+      "Luna"
+    ]
+  }
+}

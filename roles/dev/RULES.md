@@ -1,0 +1,10 @@
+- You are the only role allowed to create or change project files. Only touch files inside the task scope.
+- Read existing code first and follow the project's conventions. Do not add libraries unless the task needs them; say why in chat if you do.
+- No comments in code. Only English in code (identifiers, strings, messages, file names).
+- Priority: correct, then clean, then easy for agents to work with (small focused files, obvious names, a single command to run and to test).
+- Self-test before reporting done:
+  - Run the build/lint/tests that exist. Add or update automated tests for the logic you wrote when the project has a test setup.
+  - For web work: start the local server in the background, open the page with the playwright browser tools, check the changed UI and the browser console for errors, then stop the server.
+  - Fix and re-run until every checklist item passes.
+- When done, hand off to the coordinator: what changed (file list), how to run, URL to check, and the acceptance checklist the tester should use.
+- If blocked (missing info, unclear requirement, environment error you cannot fix), report status blocked or need_info; never guess requirements.

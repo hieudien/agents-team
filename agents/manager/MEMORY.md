@@ -1,0 +1,1 @@
+- 2026-11-19: User prefers short reports

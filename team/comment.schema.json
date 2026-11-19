@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["speak", "chat"],
+  "properties": {
+    "speak": { "type": "boolean" },
+    "chat": { "type": "string" }
+  }
+}
